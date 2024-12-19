@@ -1,0 +1,170 @@
+BASED ON CORRECTION SHEET
+----------------------------
+SUDO  
+sudo stands for **"superuser do"**. It is a command in Linux and Unix-like operating systems that allows authorized users to execute commands with superuser (root) privileges. This is particularly useful for performing administrative tasks without requiring a root login.  
+
+Virtual Machine  
+A virtual machine (VM) is essentially a computer within your computer. It enables you to run an additional operating system (like Windows, Linux, or macOS) as if it were a separate machine, though it operates as software on your primary computer. VMs are great for testing, running different programs, or maintaining isolation without needing a physical computer.  
+
+
+Rocky Linux vs. Debian  
+-Rocky Linux is a distribution based on Red Hat Enterprise Linux (RHEL), designed for stability and enterprise environments. It uses RPM packages and the `dnf/yum` package manager, making it ideal for server use.  
+-Debian is a community-driven distribution renowned for its stability and versatility. It uses DEB packages and the `apt` package manager and is widely used for servers, desktops, and lightweight systems.  
+
+In short: Rocky Linux is RHEL-based and enterprise-focused, while Debian is a standalone, community-oriented distribution.  
+
+Aptitude vs. apt  
+-Aptitude is a higher-level package manager with a user-friendly, text-based interface and interactive features for managing dependencies.  
+-apt is a simpler and faster command-line tool for managing packages on Debian-based systems.  
+
+In short: Aptitude offers advanced, interactive features, while apt is lightweight and straightforward.  
+
+AppArmor  
+AppArmor (Application Armor) is a Linux security module that enhances security by defining specific permissions for applications. It enforces profiles that control access to files, networks, and other system resources, restricting what programs can do and reducing risks.  
+
+UFW  
+UFW (Uncomplicated Firewall) is a simple tool for managing firewall settings on Linux. It streamlines the configuration of iptables to allow or block network traffic, making it easier to secure your system.  
+-A firewall monitors and controls network traffic based on predefined rules, protecting systems from unauthorized access, cyberattacks, and other malicious activities.  
+
+SSH  
+SSH (Secure Shell) is a protocol for securely connecting to remote computers over a network. It allows users to access, manage, and transfer files to remote systems using encrypted communication, ensuring data security and privacy.  
+
+LVM  
+LVM (Logical Volume Manager) is a flexible tool for managing storage in Linux. It allows you to dynamically create, resize, and manage disk partitions (logical volumes) without the limitations of traditional partitioning methods.  
+
+Crontab  
+Crontab is a background process scheduler. It enables users to specify tasks in a crontab file, which are then executed automatically at the defined times or intervals.
+
+
+Move to root - type "su"
+	       type password
+	 
+Move back from root - type "su - <username>"
+
+Check if machine has graphical environment at launch - ls /usr/bin/*session
+Check UFW service - sudo service UFW status
+Check SSH service - sudo service SSH status
+Check OS - uname -a
+Check username is in group user42 and sudo - getent group user42 sudo
+create a user - sudo adduser <username> 
+create a group - sudo addgroup <groupname>
+add user to group - sudo adduser <username> <groupname>
+
+Password Policy
+
+sudo nano /etc/pam.d/common-password
+minlen=10 ucredit=-1 dcredit=-1 lcredit=-1 maxrepeat=3 reject_username difok=7 enforce_for_root
+	minlen - length of password
+	ucredit - atleast a capital letter (-1 means min 1 / +1 means max 1)
+	dcredit - at least have to contain digits
+	lcredit - atleast a lowercase letter
+	maxrepeat - cannot repeat same charater 3 times continuously
+	reject_username - cannot contain username inside itself
+	difok - atleast 7 different character from the last password used
+	enforce_for_root - implement password policy to root 
+	
+sudo nano /etc/sudoers.d/sudo_config
+	passwd_tries - total tries for entering the password
+	badpass_message - the message when password fails
+	logfile - path where sudo log is stored
+	log_input - what will be logged
+	requiretty - setting in sudo that require TTY(terminal session) for executing commands
+	secure_path - Folders that will be excluded of sudo
+
+sudo nano /etc/login.defs
+	PASS_MAX_DAYS: It's the max days till password expiration. (30)
+	PASS_MIN_DAYS: It's the min days till password change. (2)
+	PASS_WARN_AGE: It's the days till password warning. (7)
+
+Check the password of root and login user - sudo chage -l <username> 
+Check hostname - type 'hostname'
+change hostname - move to root and type "sudo nano /etc/hostname"
+					"sudo nano /etc/hosts"
+Reboot - sudo reboot
+Partition - lsblk
+
+Check Sudo Install - dpkg -s sudo / which sudo
+add user to group sudo - sudo adduser <username> sudo
+Check if its added - getent group sudo
+Check history of command used - Go to root -> cd /var/log/sudo/ -> cat sudo_config
+
+Check UFW install - dpkg -s ufw / which ufw
+Check UFW status - sudo ufw status numbered
+add 8080 port - sudo ufw allow 8080
+delete 8080 port - sudo ufw delete <numberofrow>
+
+Check SSH install - dpkg -l | grep openssh-server
+Connect with your computer - ssh <username>@localhost -p 4241
+
+Script
+Script run time change - sudo crontab -u root -e -> change 10 to 1 min
+Check cron status - sudo service cron status
+stop script running - sudo systemctl stop cron
+
+Bash Script Explanation: `monitoring.sh
+1. uname -a: 
+   - Prints system information, including the kernel name, version, architecture, and hardware platform.  
+   - Note: It omits the CPU type if it's unknown or the platform hardware if not identifiable.
+
+2. grep "physical id" /proc/cpuinfo | wc -l: 
+   - Retrieves CPU details from /proc/cpuinfo, a file containing information such as CPU type, brand, and performance.  
+   - The grep "physical id" command searches for lines containing "physical id" to identify distinct physical CPUs.  
+   - wc -l counts the number of such lines, giving the total number of physical CPUs.
+
+3. grep "processor" /proc/cpuinfo | wc -l:  
+   - Similar to the previous command but searches for "processor" instead of "physical id".  
+   - Returns the total number of virtual cores (logical processors).
+
+4. free --mega | awk '$1 == "Mem:" {print $3}:  
+   - Displays RAM usage using the free command.  
+   - awk filters rows where the first column is "Mem:" and prints the third column, which indicates used memory (in MB).
+
+5. free --mega | awk '$1 == "Mem:" {printf("%.2f"), $3/$2*100}':  
+   - Calculates and displays the percentage of used memory with two decimal places.  
+   - $3/$2*100 computes the percentage of memory used compared to total memory.
+
+6. Disk Usage: 
+   - Command:  disk_total=$(df -m | grep "/dev/" | grep -v "/boot" | awk '{disk_t += $2} END {printf ("%.1fGb\n"), disk_t/1024}') 
+   - Retrieves disk usage using df -m (disk filesystem information in MB).  
+   - Filters lines containing /dev/ (device files) but excludes /boot  
+   - awk sums the second column (total size) across all relevant lines and converts the result to GB for output.
+
+7. CPU Usage: 
+   - Command: vmstat 1 2 | tail -1 | awk '{printf $15}'  
+   - Uses vmstat to monitor CPU statistics. The 1 2 argument specifies a 1-second interval for 2 iterations.  
+   - tail -1 extracts the last line, and awk prints the 15th column, which represents CPU idle percentage.
+
+8. **Last Reboot:**  
+   - **Command:**  
+     ```bash
+     who -b | awk '$1 == "system" {print $3 " " $4}'
+     ```  
+   - Checks the last reboot time using `who -b`.  
+   - Filters rows where the first word is "system" and prints the third and fourth columns (date and time of last reboot).
+
+9. LVM Active Check:  
+   - Command:  if [ $(lsblk | grep "lvm" | wc -l) -gt 0 ]; then echo yes; else echo no; fi 
+   - Uses lsblk to list block devices and searches for "lvm" to determine if Logical Volume Management (LVM) is active.  
+   - If any lines contain "lvm," it outputs "yes"; otherwise, it outputs "no."
+
+10. TCP Connections:  
+    - Command: ss -ta | grep ESTAB | wc -l
+    - Checks TCP connections using `ss -ta` to list all TCP connections.  
+    - Filters for established connections (ESTAB) and counts them with wc -l.
+
+11. User Login Count:
+    - Command:users | wc -w
+    - Uses users to list logged-in users and wc -w to count the number of words (each representing a logged-in user).
+
+12. Network Details:  
+    - Host Address: Obtained using hostname -I.  
+    - MAC Address: Command: ip link | grep "link/ether" | awk '{print $2}'
+      - ip link provides network interface details.  
+      - Filters lines containing "link/ether" (MAC address) and prints the second column, which holds the MAC address.
+
+13. Sudo Command Count:  
+    - Command: journalctl _COMM=sudo | grep COMMAND | wc -l
+    - Retrieves logs of commands executed with sudo using journalctl.  
+    - Filters lines containing "COMMAND" and counts them with wc -l to get the total number of sudo commands executed.
+
+
