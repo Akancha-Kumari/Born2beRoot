@@ -101,7 +101,7 @@ Script run time change - sudo crontab -u root -e -> change 10 to 1 min
 Check cron status - sudo service cron status
 stop script running - sudo systemctl stop cron
 
-Bash Script Explanation: `monitoring.sh
+Bash Script Explanation: monitoring.sh
 1. uname -a: 
    - Prints system information, including the kernel name, version, architecture, and hardware platform.  
    - Note: It omits the CPU type if it's unknown or the platform hardware if not identifiable.
